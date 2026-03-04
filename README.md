@@ -188,7 +188,16 @@ pip install -r requirements.txt
 
 ---
 
-### 2 Add transcript files
+### 2 Set up Environment Variables (Optional but Recommended)
+
+By default, the pipeline uses a rule-based fallback for extraction. To execute true dynamic extraction on any untested transcript cases, please provide a free Google Gemini API key:
+
+1. Copy `.env.example` to `.env`
+2. Add your key: `GEMINI_API_KEY="your_key_here"`
+
+---
+
+### 3 Add transcript files
 
 Place transcripts inside:
 
@@ -206,7 +215,7 @@ dataset/inputs/onboarding/bens_electric_onboarding.json
 
 ---
 
-### 3 Run the pipeline
+### 4 Run the pipeline
 
 ```bash
 python pipeline.py
@@ -245,7 +254,8 @@ This system was designed to be:
 
 # Limitations
 
-* Extraction currently uses **rule-based logic** instead of an LLM
+* Supports **Google Gemini 1.5 Flash** for dynamic extraction
+* Gracefully falls back to pure Python rule-based logic if no `.env` API key is provided
 * Transcript formats may vary depending on Fireflies export structure
 
 ---

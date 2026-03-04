@@ -190,10 +190,10 @@ pip install -r requirements.txt
 
 ### 2 Set up Environment Variables (Optional but Recommended)
 
-By default, the pipeline uses a rule-based fallback for extraction. To execute true dynamic extraction on any untested transcript cases, please provide a free Google Gemini API key:
+By default, the pipeline uses a rule-based fallback for extraction. To execute true dynamic extraction on any untested transcript cases, please provide a free Groq API key:
 
 1. Copy `.env.example` to `.env`
-2. Add your key: `GEMINI_API_KEY="your_key_here"`
+2. Add your key: `GROQ_API_KEY="your_key_here"`
 
 ---
 
@@ -254,7 +254,7 @@ This system was designed to be:
 
 # Limitations
 
-* Supports **Google Gemini 1.5 Flash** for dynamic extraction
+* Supports **Groq LLM API** (e.g. Llama 3) for dynamic extraction
 * Gracefully falls back to pure Python rule-based logic if no `.env` API key is provided
 * Transcript formats may vary depending on Fireflies export structure
 

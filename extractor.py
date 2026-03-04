@@ -1,11 +1,11 @@
-import json
 import logging
 import os
+import time
 from typing import Dict, Any
 
 # Attempt to import LLM libraries
 try:
-    import google.generativeai as genai
+    from groq import Groq
     from dotenv import load_dotenv
     load_dotenv()
     HAS_LLM = True
@@ -14,36 +14,50 @@ except ImportError:
 
 class Extractor:
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.api_key = os.getenv("GROQ_API_KEY")
         self.use_llm = HAS_LLM and bool(self.api_key)
         
         if self.use_llm:
-            genai.configure(api_key=self.api_key)
-            # Use gemini-1.5-flash as it is free and extremely fast for text parsing
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            logging.info("Extractor initialized WITH Gemini LLM.")
+            try:
+                self.client = Groq(api_key=self.api_key)
+                self.model = 'llama-3.1-8b-instant' # Fast, free, robust for JSON extraction
+                logging.info("Extractor initialized WITH Groq LLM.")
+            except Exception as e:
+                logging.error(f"Failed to initialize Groq Client: {e}")
+                self.use_llm = False
         else:
-            logging.warning("Extractor initialized WITHOUT Gemini API Key. Using fallback rule-based extraction.")
+            logging.warning("Extractor initialized WITHOUT Groq API Key. Using fallback rule-based extraction.")
 
-    def _extract_via_llm(self, text: str, prompt_template: str, fallback_data: Dict) -> Dict:
-        """Helper to call Gemini API and safely parse the JSON response."""
-        try:
-            prompt = prompt_template + f"\n\nTRANSCRIPT:\n{text}\n\nReturn ONLY a valid JSON object matching the requested schema."
-            response = self.model.generate_content(prompt)
-            
-            # Clean up potential markdown formatting in the response
-            response_text = response.text.strip()
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
+    def _extract_via_llm(self, text: str, prompt: str, schema: dict, fallback_data: Dict, retries: int = 3) -> Dict:
+        """Helper to call Groq API and safely parse the JSON response."""
+        import json
+        
+        for attempt in range(retries):
+            try:
+                system_instruction = prompt + f"\nYou must reply ONLY with valid JSON matching this schema exactly:\n{json.dumps(schema)}"
                 
-            return json.loads(response_text.strip())
-        except Exception as e:
-            logging.error(f"LLM Extraction failed: {e}. Falling back to rule-based logic.")
-            return fallback_data
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": f"TRANSCRIPT:\n{text}"}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1
+                )
+                
+                response_text = response.choices[0].message.content
+                return json.loads(response_text.strip())
+            except Exception as e:
+                logging.warning(f"LLM Extraction attempt {attempt + 1} failed: {e}")
+                if "rate limit" in str(e).lower() or "429" in str(e):
+                    logging.warning("Rate limit hit. Sleeping for 15 seconds.")
+                    time.sleep(15)
+                else:
+                    time.sleep(2)
+                    
+        logging.error("All LLM Extraction attempts failed. Falling back to rule-based logic.")
+        return fallback_data
 
     def extract_demo_memo(self, text: str, account_id: str) -> Dict[str, Any]:
         """
@@ -81,28 +95,42 @@ class Extractor:
             
         # --- 2. Attempt LLM Extraction ---
         if self.use_llm:
-            prompt = f"""
-            You are a data extraction AI. Read the following sales Demo transcript and extract the business details.
-            If a piece of information is not explicitly stated in the text, use the string "Unknown" or an empty list [].
+            prompt = "You are a data extraction AI. Read the sales Demo transcript and extract the business details. If missing, use 'Unknown'."
             
-            You must return exactly this JSON schema format:
-            {{
-                "account_id": "{account_id}",
-                "company_name": "string",
-                "business_hours": {{"days": "string", "start": "string", "end": "string", "timezone": "string"}},
-                "office_address": "string",
-                "services_supported": ["string"],
-                "emergency_definition": ["string"],
-                "emergency_routing_rules": ["string"],
-                "non_emergency_routing_rules": "string",
-                "call_transfer_rules": "string",
-                "integration_constraints": "string",
-                "after_hours_flow_summary": "string",
-                "office_hours_flow_summary": "string",
-                "questions_or_unknowns": ["string"]
-            }}
-            """
-            return self._extract_via_llm(text, prompt, fallback_memo)
+            schema = {
+                "type": "OBJECT",
+                "properties": {
+                    "account_id": {"type": "STRING"},
+                    "company_name": {"type": "STRING"},
+                    "business_hours": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "days": {"type": "STRING"},
+                            "start": {"type": "STRING"},
+                            "end": {"type": "STRING"},
+                            "timezone": {"type": "STRING"}
+                        }
+                    },
+                    "office_address": {"type": "STRING"},
+                    "services_supported": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "emergency_definition": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "emergency_routing_rules": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "non_emergency_routing_rules": {"type": "STRING"},
+                    "call_transfer_rules": {"type": "STRING"},
+                    "integration_constraints": {"type": "STRING"},
+                    "after_hours_flow_summary": {"type": "STRING"},
+                    "office_hours_flow_summary": {"type": "STRING"},
+                    "questions_or_unknowns": {"type": "ARRAY", "items": {"type": "STRING"}}
+                },
+                "required": [
+                    "account_id", "company_name", "business_hours", "office_address",
+                    "services_supported", "emergency_definition", "emergency_routing_rules",
+                    "non_emergency_routing_rules", "call_transfer_rules", "integration_constraints",
+                    "after_hours_flow_summary", "office_hours_flow_summary", "questions_or_unknowns"
+                ]
+            }
+            
+            return self._extract_via_llm(text, prompt, schema, fallback_memo)
             
         return fallback_memo
 
@@ -113,6 +141,7 @@ class Extractor:
         Attempts to use Gemini 1.5 Flash. Falls back to pure Python rules if it fails.
         """
         # --- 1. Define the Fallback Logic ---
+        import json
         v2_memo_fallback = json.loads(json.dumps(v1_memo)) # Deep copy
         text_lower = text.lower()
         
@@ -132,6 +161,7 @@ class Extractor:
             
         # --- 2. Attempt LLM Extraction ---
         if self.use_llm:
+            import json
             prompt = f"""
             You are a data extraction AI. We previously extracted an incomplete Profile (V1) from a demo call.
             Read this follow-up Onboarding Call transcript and UPDATE the incomplete fields.
@@ -144,6 +174,40 @@ class Extractor:
             
             Return the full, updated JSON schema matching the exact structure from V1.
             """
-            return self._extract_via_llm(text, prompt, v2_memo_fallback)
+            
+            schema = {
+                "type": "OBJECT",
+                "properties": {
+                    "account_id": {"type": "STRING"},
+                    "company_name": {"type": "STRING"},
+                    "business_hours": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "days": {"type": "STRING"},
+                            "start": {"type": "STRING"},
+                            "end": {"type": "STRING"},
+                            "timezone": {"type": "STRING"}
+                        }
+                    },
+                    "office_address": {"type": "STRING"},
+                    "services_supported": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "emergency_definition": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "emergency_routing_rules": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "non_emergency_routing_rules": {"type": "STRING"},
+                    "call_transfer_rules": {"type": "STRING"},
+                    "integration_constraints": {"type": "STRING"},
+                    "after_hours_flow_summary": {"type": "STRING"},
+                    "office_hours_flow_summary": {"type": "STRING"},
+                    "questions_or_unknowns": {"type": "ARRAY", "items": {"type": "STRING"}}
+                },
+                "required": [
+                    "account_id", "company_name", "business_hours", "office_address",
+                    "services_supported", "emergency_definition", "emergency_routing_rules",
+                    "non_emergency_routing_rules", "call_transfer_rules", "integration_constraints",
+                    "after_hours_flow_summary", "office_hours_flow_summary", "questions_or_unknowns"
+                ]
+            }
+            
+            return self._extract_via_llm(text, prompt, schema, v2_memo_fallback)
 
         return v2_memo_fallback

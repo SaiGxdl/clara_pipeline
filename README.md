@@ -160,7 +160,7 @@ Steps:
 2. Extract updated rules
 3. Merge updates with previous configuration
 4. Generate updated agent specification
-5. Generate changelog
+5. Generate `changes.md` file
 
 Output location:
 
@@ -254,7 +254,7 @@ This system was designed to be:
 
 # Limitations
 
-* Supports **Groq LLM API** (e.g. Llama 3) for dynamic extraction
+* Supports **Groq LLM API** (e.g. Llama 3.1) for dynamic extraction
 * Gracefully falls back to pure Python rule-based logic if no `.env` API key is provided
 * Transcript formats may vary depending on Fireflies export structure
 

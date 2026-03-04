@@ -1,0 +1,21 @@
+{
+    "title": "Ben's Electric Solutions - Onboarding Data Gathering",
+    "sentences": [
+        {
+            "speaker_name": "Clara Rep",
+            "text": "Let's nail down your configurations for the agent. What are your hours and address?"
+        },
+        {
+            "speaker_name": "Ben",
+            "text": "We are Monday - Friday, 8:00 AM to 5:00 PM EST. The office is 123 Main St, Springfield, IL."
+        },
+        {
+            "speaker_name": "Clara Rep",
+            "text": "What counts as an emergency?"
+        },
+        {
+            "speaker_name": "Ben",
+            "text": "Fires, complete power outages, and sparking electrical panels. For emergencies, try my direct line: 555-0101 first. If no answer, call Dispatcher Sarah: 555-0102. Timeout after 60 seconds."
+        }
+    ]
+}

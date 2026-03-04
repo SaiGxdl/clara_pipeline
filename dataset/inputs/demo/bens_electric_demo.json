@@ -1,0 +1,9 @@
+{
+  "title": "Ben's Electric Solutions - Demo Call",
+  "sentences": [
+    {"speaker_name": "Clara Sales", "text": "Hi Ben, how are you running things today?"},
+    {"speaker_name": "Ben", "text": "I'm Ben, and I run Ben's Electric Solutions. I have 30 years in the trade. I handle residential, commercial jobs, service calls, and projects."},
+    {"speaker_name": "Clara Sales", "text": "Great! Who answers your calls?"},
+    {"speaker_name": "Ben", "text": "I do mostly. I need an AI virtual receptionist 24/7 to qualify jobs and schedule. I use Jobber CRM. If there is an emergency after hours, call me personally because I am on call."}
+  ]
+}

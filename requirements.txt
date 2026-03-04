@@ -1,0 +1,8 @@
+# Fireflies Transcript -> Retell Spec Automation Pipeline
+# Standard library used for pure execution.
+# Can add requirements if switching to external LLM calls or API orchestration requests.
+
+json
+pathlib
+glob
+os

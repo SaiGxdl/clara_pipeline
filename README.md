@@ -1,6 +1,6 @@
 # Clara AI Automation Pipeline
 
-This project implements a **zero-cost automation pipeline** that converts conversation transcripts from Demo and Onboarding calls into structured **Retell AI Voice Agent configurations**.
+This project implements a **zero-cost automation pipeline** that converts conversation transcripts from **Demo** and **Onboarding** calls into structured **Retell AI Voice Agent configurations**.
 
 The system extracts operational rules from conversations and generates **version-controlled AI agent specifications**.
 
@@ -22,7 +22,9 @@ Each business has different rules for:
 * call routing
 * transfer protocols
 
-This pipeline converts **human conversations → structured AI agent configurations**.
+This pipeline converts:
+
+**Human Conversations → Structured AI Agent Configurations**
 
 ---
 
@@ -83,7 +85,7 @@ These files contain:
 * timestamps
 * conversation content
 
-Using transcripts avoids the need for **paid speech-to-text services**.
+Using transcripts avoids the need for **paid speech-to-text services**, keeping the pipeline **zero-cost**.
 
 ---
 
@@ -129,13 +131,13 @@ Steps:
 4. Generate Retell agent specification
 5. Save results as **version v1**
 
-Output:
+Output location:
 
 ```text
 outputs/accounts/<account_id>/v1/
 ```
 
-Files generated:
+Generated files:
 
 ```text
 account_memo.json
@@ -156,17 +158,17 @@ Steps:
 
 1. Load existing **v1 memo**
 2. Extract updated rules
-3. Merge updates
+3. Merge updates with previous configuration
 4. Generate updated agent specification
 5. Generate changelog
 
-Output:
+Output location:
 
 ```text
 outputs/accounts/<account_id>/v2/
 ```
 
-Files generated:
+Generated files:
 
 ```text
 account_memo.json
@@ -178,7 +180,7 @@ changes.md
 
 # Running the Project
 
-### Install dependencies
+### 1 Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -186,16 +188,25 @@ pip install -r requirements.txt
 
 ---
 
-### Add transcript files
+### 2 Add transcript files
+
+Place transcripts inside:
 
 ```text
 dataset/inputs/demo/
 dataset/inputs/onboarding/
 ```
 
+Example:
+
+```text
+dataset/inputs/demo/bens_electric_demo.json
+dataset/inputs/onboarding/bens_electric_onboarding.json
+```
+
 ---
 
-### Run the pipeline
+### 3 Run the pipeline
 
 ```bash
 python pipeline.py
@@ -203,7 +214,9 @@ python pipeline.py
 
 ---
 
-### Generated Output
+# Generated Output
+
+Outputs are automatically created inside:
 
 ```text
 outputs/accounts/
@@ -222,23 +235,24 @@ outputs/accounts/bens_electric/v2/
 
 This system was designed to be:
 
-* zero-cost
-* modular
-* reproducible
-* version controlled
-* batch capable
+* **Zero-cost**
+* **Modular**
+* **Reproducible**
+* **Version-controlled**
+* **Batch capable**
 
 ---
 
 # Limitations
 
-* extraction uses rule-based logic instead of an LLM
-* transcript format variations may require parser adjustments
+* Extraction currently uses **rule-based logic** instead of an LLM
+* Transcript formats may vary depending on Fireflies export structure
 
 ---
 
 # Author
 
-Sai Charan  
+**Sai Charan**
+
 B.Tech Computer Science and Business Systems  
 VIT-AP University

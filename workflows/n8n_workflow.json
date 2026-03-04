@@ -1,0 +1,74 @@
+{
+    "name": "Clara AI Mock Automation Pipeline",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "1",
+            "name": "Webhook Trigger",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "notesInFlow": true,
+            "notes": "Triggers when a new recording/transcript is ready"
+        },
+        {
+            "parameters": {
+                "command": "python pipeline.py"
+            },
+            "id": "2",
+            "name": "Execute Pipeline Script",
+            "type": "n8n-nodes-base.executeCommand",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ],
+            "notesInFlow": true,
+            "notes": "Runs the local Python script to process the transcript"
+        },
+        {
+            "parameters": {
+                "channel": "#ai-deployments",
+                "text": "New V2 Agent Config generated and deployed to Retell!"
+            },
+            "id": "3",
+            "name": "Slack Notification",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 1,
+            "position": [
+                750,
+                300
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Execute Pipeline Script",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Pipeline Script": {
+            "main": [
+                [
+                    {
+                        "node": "Slack Notification",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {}
+}

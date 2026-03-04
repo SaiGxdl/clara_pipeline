@@ -43,6 +43,9 @@ clara_pipeline/
 ├── agent_generator.py
 ├── versioning.py
 │
+├── workflows/
+│   └── n8n_workflow.json   # Mock automation workflow export
+│
 ├── dataset/
 │   └── inputs/
 │       ├── demo/
@@ -257,6 +260,16 @@ This system was designed to be:
 * Supports **Groq LLM API** (e.g. Llama 3.1) for dynamic extraction
 * Gracefully falls back to pure Python rule-based logic if no `.env` API key is provided
 * Transcript formats may vary depending on Fireflies export structure
+
+---
+
+# Future Improvements for Production
+
+If scaling this system into a true production environment, the following improvements would be implemented:
+
+1. **Cloud Webhooks**: Replace local file polling with a direct real-time webhook listener (e.g., via AWS API Gateway or n8n) to trigger the pipeline instantly when Fireflies finishes a transcription.
+2. **Database Integration**: Instead of dumping JSON strings to absolute local paths, integrate PostgreSQL or MongoDB to store raw conversation states, agent versions, and generated schema outputs robustly.
+3. **Direct Retell API Deployment**: Automatically push the successfully generated `v2/agent_spec.json` directly to the active Retell AI staging environment using their external REST APIs.
 
 ---
 
